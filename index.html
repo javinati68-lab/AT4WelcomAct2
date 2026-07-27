@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mr. Rocha’s English Class: AT4 Starter Unit Activity 2</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        gray: {
+                            900: '#111827',
+                            800: '#1f2937',
+                            700: '#374151',
+                            600: '#4b5563',
+                            500: '#6b7280',
+                            400: '#9ca3af',
+                            100: '#f3f4f6',
+                        },
+                        primary: '#6366f1', // Indigo
+                        secondary: '#8b5cf6', // Violet
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #111827; /* gray-900 */
+            color: #f3f4f6; /* gray-100 */
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Make calendar icon white in dark theme */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+        }
+
+        /* Custom scrollbar for better look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1f2937; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4b5563; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6b7280; 
+        }
+
+        /* Tooltip styling for phrasal verbs */
+        .pv-tooltip-container {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            border-bottom: 2px dashed #8b5cf6;
+            transition: all 0.2s;
+        }
+        .pv-tooltip-container:hover {
+            background-color: rgba(139, 92, 246, 0.2);
+            border-radius: 4px;
+        }
+        .pv-tooltip {
+            visibility: hidden;
+            width: 280px;
+            background-color: #374151;
+            color: #fff;
+            text-align: left;
+            border-radius: 8px;
+            padding: 12px;
+            position: absolute;
+            z-index: 50;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -140px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            font-size: 0.875rem;
+            pointer-events: none; /* Prevent tooltip from interfering with hover */
+        }
+        .pv-tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #374151 transparent transparent transparent;
+        }
+        .pv-tooltip-container:hover .pv-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Select inputs styling */
+        select {
+            background-color: #374151;
+            color: white;
+            border: 1px solid #4b5563;
+            border-radius: 0.375rem;
+            padding: 0.25rem 0.5rem;
+            appearance: none;
+            cursor: pointer;
+        }
+        select:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        select.correct { border-color: #10b981; background-color: rgba(16, 185, 129, 0.1); }
+        select.incorrect { border-color: #ef4444; background-color: rgba(239, 68, 68, 0.1); }
+
+        /* Tap-to-place logic styling (Mobile friendly drag-and-drop alternative) */
+        .word-bank-item {
+            display: inline-block;
+            background-color: #4b5563;
+            padding: 0.5rem 1rem;
+            margin: 0.25rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.1s, background-color 0.2s;
+        }
+        .word-bank-item:active { transform: scale(0.95); }
+        .word-bank-item.used { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
+        
+        .drop-zone {
+            display: inline-block;
+            min-width: 100px;
+            min-height: 38px;
+            border: 2px dashed #6b7280;
+            border-radius: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            margin: 0 0.25rem;
+            vertical-align: middle;
+            cursor: pointer;
+            text-align: center;
+            background-color: #1f2937;
+        }
+        .drop-zone.filled {
+            border-style: solid;
+            border-color: #8b5cf6;
+            background-color: #4b5563;
+        }
+        .drop-zone.correct { border-color: #10b981; background-color: rgba(16, 185, 129, 0.2); }
+        .drop-zone.incorrect { border-color: #ef4444; background-color: rgba(239, 68, 68, 0.2); }
+        
+        /* Activity Sections */
+        .activity-section { display: none; animation: fadeIn 0.5s; }
+        .activity-section.active { display: block; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Fallback image styling */
+        .media-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #374151;
+            color: #9ca3af;
+            border-radius: 0.5rem;
+            border: 2px dashed #4b5563;
+        }
+    </style>
+</head>
+<body class="antialiased flex flex-col min-h-screen">
+
+    <header class="sticky top-0 z-40 w-full backdrop-blur flex-none transition-colors duration-500 bg-gray-900/90 border-b border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between">
+                <h1 class="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
+                    Mr. Rocha’s English Class
+                </h1>
+                <div class="text-sm font-medium text-gray-400">AT4 Starter Unit Activity 2</div>
+            </div>
+            <!-- Progress Bar -->
+            <div class="mt-4 w-full bg-gray-700 rounded-full h-2.5">
+                <div id="progress-bar" class="bg-gradient-to-r from-primary to-secondary h-2.5 rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+            </div>
+            <div class="flex justify-between text-xs text-gray-500 mt-1">
+                <span id="progress-text">Welcome</span>
+                <span>Results</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <section id="section-0" class="activity-section active bg-gray-800 rounded-2xl shadow-xl p-6 md:p-10 border border-gray-700">
+            <h2 class="text-3xl font-bold mb-6 text-center">Welcome to Activity 2</h2>
+            <p class="text-gray-300 text-center mb-8">Please enter your details to begin the worksheet.</p>
+            
+            <div class="max-w-md mx-auto space-y-6">
+                <div>
+                    <label for="student-name" class="block text-sm font-medium text-gray-300 mb-2">Full Name</label>
+                    <input type="text" id="student-name" class="w-full bg-gray-700 border border-gray-600 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition" placeholder="e.g. Jane Doe">
+                </div>
+                <div>
+                    <label for="activity-date" class="block text-sm font-medium text-gray-300 mb-2">Date</label>
+                    <input type="date" id="activity-date" class="w-full bg-gray-700 border border-gray-600 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition">
+                </div>
+                <button onclick="startWorksheet()" class="w-full bg-gradient-to-r from-primary to-secondary hover:from-indigo-500 hover:to-purple-500 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition-transform transform hover:scale-[1.02]">
+                    Start Worksheet
+                </button>
+            </div>
+        </section>
+
+        <section id="section-1" class="activity-section bg-gray-800 rounded-2xl shadow-xl p-6 md:p-10 border border-gray-700">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-primary">Activity 1: Elements of a Story</h2>
+                <span class="bg-gray-700 text-gray-300 py-1 px-3 rounded-full text-sm font-semibold score-display hidden" id="score-display-1">0/7</span>
+            </div>
+            <p class="text-gray-300 mb-4 font-semibold">The Odyssey</p>
+            <p class="text-gray-400 mb-6 italic">Complete the text with words from the list.</p>
+            
+            <div class="bg-gray-700 rounded-lg p-4 mb-6 flex flex-wrap gap-2 justify-center font-medium">
+                characters | dialogue | ending | hero | plot | set | villain
+            </div>
+
+            <div class="text-lg leading-relaxed text-gray-200 space-y-4">
+                <p>
+                    I read an epic poem last week called The Odyssey. It is a classic myth – a kind of adventure story about a long journey home. It is 1 
+                    <select id="a1-q1" class="mx-1"><option value=""></option><option value="characters">characters</option><option value="dialogue">dialogue</option><option value="ending">ending</option><option value="hero">hero</option><option value="plot">plot</option><option value="set">set</option><option value="villain">villain</option></select>
+                    in ancient Greece and across the Mediterranean Sea.
+                </p>
+                <p>
+                    The 2 
+                    <select id="a1-q2" class="mx-1"><option value=""></option><option value="characters">characters</option><option value="dialogue">dialogue</option><option value="ending">ending</option><option value="hero">hero</option><option value="plot">plot</option><option value="set">set</option><option value="villain">villain</option></select>
+                    of the story is a clever king named Odysseus, who encounters many fascinating 3 
+                    <select id="a1-q3" class="mx-1"><option value=""></option><option value="characters">characters</option><option value="dialogue">dialogue</option><option value="ending">ending</option><option value="hero">hero</option><option value="plot">plot</option><option value="set">set</option><option value="villain">villain</option></select>
+                    on his voyage, such as gods, witches, and magical creatures. Along the way, he is constantly blocked by Poseidon, the angry god of the sea, who acts as the main 4 
+                    <select id="a1-q4" class="mx-1"><option value=""></option><option value="characters">characters</option><option value="dialogue">dialogue</option><option value="ending">ending</option><option value="hero">hero</option><option value="plot">plot</option><option value="set">set</option><option value="villain">villain</option></select>
+                    of the story.
+                </p>
+                <p>
+                    Anyway, the poem is legendary. I thought the overall 5 
+                    <select id="a1-q5" class="mx-1"><option value=""></option><option value="characters">characters</option><option value="dialogue">dialogue</option><option value="ending">ending</option><option value="hero">hero</option><option value="plot">plot</option><option value="set">set</option><option value="villain">villain</option></select>
+                    was very exciting, full of dangerous adventures and narrow escapes. (I won't tell you the 6 
+                    <select id="a1-q6" class="mx-1"><option value=""></option><option value="characters">characters</option><option value="dialogue">dialogue</option><option value="ending">ending</option><option value="hero">hero</option><option value="plot">plot</option><option value="set">set</option><option value="villain">villain</option></select>
+                    , though, in case you want to read the epic yourself.) And I really liked the 7 
+                    <select id="a1-q7" class="mx-1"><option value=""></option><option value="characters">characters</option><option value="dialogue">dialogue</option><option value="ending">ending</option><option value="hero">hero</option><option value="plot">plot</option><option value="set">set</option><option value="villain">villain</option></select>
+                    , too – the speeches and conversations between mortals and gods feel very powerful and dramatic. A great classic – I highly recommend it.
+                </p>
+            </div>
+
+            <!-- Image placeholder / implementation -->
+            <div class="mt-8 mb-4 rounded-xl overflow-hidden border border-gray-700 bg-gray-900 flex justify-center shadow-inner">
+                <img src="image1.jpg" alt="The Odyssey Reference" class="max-w-full h-auto max-h-96 object-contain" onerror="this.outerHTML='<div class=\'media-placeholder w-full h-64\'><span class=\'flex flex-col items-center\'><svg class=\'w-12 h-12 mb-2 text-gray-500\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z\'></path></svg>image1.jpg not found in folder</span></div>'">
+            </div>
+
+            <div class="mt-8 flex justify-between items-center border-t border-gray-700 pt-6">
+                <button onclick="navBack()" class="bg-gray-600 hover:bg-gray-500 text-white py-2 px-6 rounded-lg transition font-medium">Back</button>
+                <div class="space-x-4">
+                    <button id="btn-check-1" onclick="checkAct1()" class="bg-secondary hover:bg-purple-500 text-white py-2 px-6 rounded-lg transition font-bold shadow-md">Check Answers</button>
+                    <button onclick="navNext()" class="bg-primary hover:bg-indigo-500 text-white py-2 px-6 rounded-lg transition font-medium">Next Activity</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="section-2" class="activity-section bg-gray-800 rounded-2xl shadow-xl p-6 md:p-10 border border-gray-700">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-primary">Activity 2: Phrasal Verbs in Context</h2>
+                <span class="bg-gray-700 text-gray-300 py-1 px-3 rounded-full text-sm font-semibold score-display hidden" id="score-display-2">0/8</span>
+            </div>
+            <p class="text-gray-400 mb-6 italic">Choose the correct words. <br><span class="text-secondary font-semibold">Hover over or tap the highlighted phrasal verbs</span> to hear them, see the Spanish translation, and an example.</p>
+
+            <div class="space-y-6 text-lg text-gray-200">
+                <!-- Q1 -->
+                <div class="flex flex-col md:flex-row md:items-baseline gap-2 bg-gray-750 p-3 rounded-lg hover:bg-gray-700 transition">
+                    <span class="font-bold text-gray-400 w-6">1.</span>
+                    <p class="flex-1 leading-relaxed">Odysseus faced many dangerous monsters, but he never 
+                        <select id="a2-q1" class="mx-1"><option value=""></option><option value="gave up">gave up</option><option value="ended up">ended up</option></select>
+                        trying to return to his wife Penelope.
+                        <!-- Tooltip anchor -->
+                        <span class="pv-tooltip-container" onmouseenter="speakText('gave up')" data-es="rendirse" data-ex="I will never give up on my dreams.">
+                            <span class="sr-only">Pharsal verb definition</span>
+                            <div class="pv-tooltip">
+                                <strong class="text-secondary text-base block mb-1">gave up</strong>
+                                <span class="text-gray-300 block mb-2 text-sm italic">Spanish: rendirse</span>
+                                <span class="text-white">Example: I will never give up on my dreams.</span>
+                            </div>
+                        </span>
+                    </p>
+                </div>
+                
+                <!-- Q2 -->
+                <div class="flex flex-col md:flex-row md:items-baseline gap-2 bg-gray-750 p-3 rounded-lg hover:bg-gray-700 transition">
+                    <span class="font-bold text-gray-400 w-6">2.</span>
+                    <p class="flex-1 leading-relaxed">To trick the men who wanted to marry her, Penelope 
+                        <select id="a2-q2" class="mx-1"><option value=""></option><option value="gave up">gave up</option><option value="took up">took up</option></select>
+                        weaving a burial shroud, secretly unraveling it every night.
+                        <span class="pv-tooltip-container" onmouseenter="speakText('took up')" data-es="empezar una afición / ocupar tiempo" data-ex="She decided to take up painting in her free time.">
+                            <div class="pv-tooltip">
+                                <strong class="text-secondary text-base block mb-1">took up</strong>
+                                <span class="text-gray-300 block mb-2 text-sm italic">Spanish: empezar una afición / ocupar tiempo</span>
+                                <span class="text-white">Example: She decided to take up painting in her free time.</span>
+                            </div>
+                        </span>
+                    </p>
+                </div>
+
+                <!-- Q3 -->
+                <div class="flex flex-col md:flex-row md:items-baseline gap-2 bg-gray-750 p-3 rounded-lg hover:bg-gray-700 transition">
+                    <span class="font-bold text-gray-400 w-6">3.</span>
+                    <p class="flex-1 leading-relaxed">The suitors were causing absolute chaos in Ithaca, but the goddess Athena helped Odysseus 
+                        <select id="a2-q3" class="mx-1"><option value=""></option><option value="sort it out">sort it out</option><option value="blow it out">blow it out</option></select>
+                        .
+                        <span class="pv-tooltip-container" onmouseenter="speakText('sort it out')" data-es="resolver / solucionar" data-ex="We have a problem, but we will sort it out.">
+                            <div class="pv-tooltip">
+                                <strong class="text-secondary text-base block mb-1">sort it out</strong>
+                                <span class="text-gray-300 block mb-2 text-sm italic">Spanish: resolver / solucionar</span>
+                                <span class="text-white">Example: We have a problem, but we will sort it out.</span>
+                            </div>
+                        </span>
+                    </p>
+                </div>
+
+                <!-- Q4 -->
+                <div class="flex flex-col md:flex-row md:items-baseline gap-2 bg-gray-750 p-3 rounded-lg hover:bg-gray-700 transition">
+                    <span class="font-bold text-gray-400 w-6">4.</span>
+                    <p class="flex-1 leading-relaxed">"If we 
+                        <select id="a2-q4" class="mx-1"><option value=""></option><option value="get on">get on</option><option value="keep on">keep on</option></select>
+                        offending Poseidon," Odysseus warned his men, "we will never reach our homeland."
+                        <span class="pv-tooltip-container" onmouseenter="speakText('keep on')" data-es="continuar" data-ex="Keep on walking until you reach the corner.">
+                            <div class="pv-tooltip">
+                                <strong class="text-secondary text-base block mb-1">keep on</strong>
+                                <span class="text-gray-300 block mb-2 text-sm italic">Spanish: continuar</span>
+                                <span class="text-white">Example: Keep on walking until you reach the corner.</span>
+                            </div>
+                        </span>
+                    </p>
+                </div>
+
+                <!-- Q5 -->
+                <div class="flex flex-col md:flex-row md:items-baseline gap-2 bg-gray-750 p-3 rounded-lg hover:bg-gray-700 transition">
+                    <span class="font-bold text-gray-400 w-6">5.</span>
+                    <p class="flex-1 leading-relaxed">After twenty long years away at sea, Odysseus was truly 
+                        <select id="a2-q5" class="mx-1"><option value=""></option><option value="looking forward to">looking forward to</option><option value="looking into">looking into</option></select>
+                        seeing his son Telemachus again.
+                        <span class="pv-tooltip-container" onmouseenter="speakText('looking forward to')" data-es="esperar con ansias" data-ex="I am looking forward to the weekend.">
+                            <div class="pv-tooltip">
+                                <strong class="text-secondary text-base block mb-1">looking forward to</strong>
+                                <span class="text-gray-300 block mb-2 text-sm italic">Spanish: esperar con ansias</span>
+                                <span class="text-white">Example: I am looking forward to the weekend.</span>
+                            </div>
+                        </span>
+                    </p>
+                </div>
+
+                <!-- Q6 -->
+                <div class="flex flex-col md:flex-row md:items-baseline gap-2 bg-gray-750 p-3 rounded-lg hover:bg-gray-700 transition">
+                    <span class="font-bold text-gray-400 w-6">6.</span>
+                    <p class="flex-1 leading-relaxed">The Cyclops Polyphemus is a massive, terrifying giant with only one eye, so he really 
+                        <select id="a2-q6" class="mx-1"><option value=""></option><option value="stands out">stands out</option><option value="looks out">looks out</option></select>
+                        among other creatures.
+                        <span class="pv-tooltip-container" onmouseenter="speakText('stands out')" data-es="destacar" data-ex="Her bright red dress makes her stand out.">
+                            <div class="pv-tooltip">
+                                <strong class="text-secondary text-base block mb-1">stands out</strong>
+                                <span class="text-gray-300 block mb-2 text-sm italic">Spanish: destacar</span>
+                                <span class="text-white">Example: Her bright red dress makes her stand out.</span>
+                            </div>
+                        </span>
+                    </p>
+                </div>
+
+                <!-- Q7 -->
+                <div class="flex flex-col md:flex-row md:items-baseline gap-2 bg-gray-750 p-3 rounded-lg hover:bg-gray-700 transition">
+                    <span class="font-bold text-gray-400 w-6">7.</span>
+                    <p class="flex-1 leading-relaxed">The crew couldn't sail away from the island quickly because their wooden ship 
+                        <select id="a2-q7" class="mx-1"><option value=""></option><option value="broke down">broke down</option><option value="blew out">blew out</option></select>
+                        during the terrible storm.
+                        <span class="pv-tooltip-container" onmouseenter="speakText('broke down')" data-es="averiarse / romperse" data-ex="My car broke down on the highway.">
+                            <div class="pv-tooltip">
+                                <strong class="text-secondary text-base block mb-1">broke down</strong>
+                                <span class="text-gray-300 block mb-2 text-sm italic">Spanish: averiarse / romperse</span>
+                                <span class="text-white">Example: My car broke down on the highway.</span>
+                            </div>
+                        </span>
+                    </p>
+                </div>
+
+                <!-- Q8 -->
+                <div class="flex flex-col md:flex-row md:items-baseline gap-2 bg-gray-750 p-3 rounded-lg hover:bg-gray-700 transition">
+                    <span class="font-bold text-gray-400 w-6">8.</span>
+                    <p class="flex-1 leading-relaxed">Because his starving crew stubbornly ate the sun god's sacred cattle, they 
+                        <select id="a2-q8" class="mx-1"><option value=""></option><option value="took up">took up</option><option value="ended up">ended up</option></select>
+                        being destroyed by a lightning bolt from Zeus.
+                        <span class="pv-tooltip-container" onmouseenter="speakText('ended up')" data-es="terminar / acabar en una situación" data-ex="We got lost and ended up in a different city.">
+                            <div class="pv-tooltip">
+                                <strong class="text-secondary text-base block mb-1">ended up</strong>
+                                <span class="text-gray-300 block mb-2 text-sm italic">Spanish: terminar / acabar en una situación</span>
+                                <span class="text-white">Example: We got lost and ended up in a different city.</span>
+                            </div>
+                        </span>
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-between items-center border-t border-gray-700 pt-6">
+                <button onclick="navBack()" class="bg-gray-600 hover:bg-gray-500 text-white py-2 px-6 rounded-lg transition font-medium">Back</button>
+                <div class="space-x-4">
+                    <button id="btn-check-2" onclick="checkAct2()" class="bg-secondary hover:bg-purple-500 text-white py-2 px-6 rounded-lg transition font-bold shadow-md">Check Answers</button>
+                    <button onclick="navNext()" class="bg-primary hover:bg-indigo-500 text-white py-2 px-6 rounded-lg transition font-medium">Next Activity</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="section-3" class="activity-section bg-gray-800 rounded-2xl shadow-xl p-6 md:p-10 border border-gray-700">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-primary">Activity 3: Scrambled Compound Sentences</h2>
+                <span class="bg-gray-700 text-gray-300 py-1 px-3 rounded-full text-sm font-semibold score-display hidden" id="score-display-3">0/15</span>
+            </div>
+            <p class="text-gray-400 mb-2 italic">Construct the 15 sentences using the phrasal verbs from the previous activity.</p>
+            <p class="text-sm text-gray-300 mb-6 bg-gray-700 p-3 rounded-lg border-l-4 border-primary">
+                <strong>Instructions:</strong> Tap a word in the word bank to select it, then tap an empty box to place it. Tap a word inside a box to remove it. Click the speaker icon to hear the complete sentence.
+            </p>
+
+            <div id="act3-container" class="space-y-10">
+                <!-- Javascript will populate these 15 items here to keep HTML clean -->
+            </div>
+
+            <div class="mt-10 flex justify-between items-center border-t border-gray-700 pt-6">
+                <button onclick="navBack()" class="bg-gray-600 hover:bg-gray-500 text-white py-2 px-6 rounded-lg transition font-medium">Back</button>
+                <div class="space-x-4">
+                    <button id="btn-check-3" onclick="checkAct3()" class="bg-secondary hover:bg-purple-500 text-white py-2 px-6 rounded-lg transition font-bold shadow-md">Check Answers</button>
+                    <button onclick="navNext()" class="bg-primary hover:bg-indigo-500 text-white py-2 px-6 rounded-lg transition font-medium">Next Activity</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="section-4" class="activity-section bg-gray-800 rounded-2xl shadow-xl p-6 md:p-10 border border-gray-700">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-primary">Activity 4: Future Plans in Ithaca</h2>
+                <span class="bg-gray-700 text-gray-300 py-1 px-3 rounded-full text-sm font-semibold score-display hidden" id="score-display-4">0/6</span>
+            </div>
+            <p class="text-gray-400 mb-6 italic">Read the conversation. Put the phrases into the correct places.</p>
+            
+            <div class="bg-gray-700 rounded-lg p-4 mb-6 flex flex-wrap gap-2 justify-center font-medium text-sm md:text-base">
+                when you finish school | get a good degree | to start a family | and then travel the world | then retire | before I think about settling down
+            </div>
+
+            <div class="space-y-6 text-gray-200 bg-gray-900/50 p-6 rounded-xl border border-gray-700">
+                <div class="flex gap-4">
+                    <div class="font-bold text-secondary w-24 flex-shrink-0 text-right">Penelope:</div>
+                    <div class="flex-1">So, Telemachus, have you thought about which Greek academy of philosophy you want to go to yet?</div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="font-bold text-primary w-24 flex-shrink-0 text-right">Telemachus:</div>
+                    <div class="flex-1">I told you, Mother – I’m not so sure that I want to study in Athens.</div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="font-bold text-secondary w-24 flex-shrink-0 text-right">Penelope:</div>
+                    <div class="flex-1 leading-loose">But if you <span class="font-bold text-gray-400">1</span> 
+                        <select id="a4-q1" class="mx-1 max-w-[200px] truncate"><option value=""></option><option value="when you finish school">when you finish school</option><option value="get a good degree">get a good degree</option><option value="to start a family">to start a family</option><option value="and then travel the world">and then travel the world</option><option value="then retire">then retire</option><option value="before I think about settling down">before I think about settling down</option></select>
+                        , you’ll be guaranteed a secure future. You know, maybe in ten years, you’ll be ruling a huge kingdom!
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="font-bold text-primary w-24 flex-shrink-0 text-right">Telemachus:</div>
+                    <div class="flex-1 leading-loose">But that’s just it, Mother – I don’t want to just sit in a palace or manage a kingdom right away. I don’t want to spend 40 years fighting off these greedy suitors and <span class="font-bold text-gray-400">2</span> 
+                        <select id="a4-q2" class="mx-1 max-w-[200px] truncate"><option value=""></option><option value="when you finish school">when you finish school</option><option value="get a good degree">get a good degree</option><option value="to start a family">to start a family</option><option value="and then travel the world">and then travel the world</option><option value="then retire">then retire</option><option value="before I think about settling down">before I think about settling down</option></select>
+                        and wonder where my youth went. That’s not the heroic future I want – I think.
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="font-bold text-secondary w-24 flex-shrink-0 text-right">Penelope:</div>
+                    <div class="flex-1 leading-loose">Well, so what are you going to do <span class="font-bold text-gray-400">3</span> 
+                        <select id="a4-q3" class="mx-1 max-w-[200px] truncate"><option value=""></option><option value="when you finish school">when you finish school</option><option value="get a good degree">get a good degree</option><option value="to start a family">to start a family</option><option value="and then travel the world">and then travel the world</option><option value="then retire">then retire</option><option value="before I think about settling down">before I think about settling down</option></select>
+                        then?
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="font-bold text-primary w-24 flex-shrink-0 text-right">Telemachus:</div>
+                    <div class="flex-1 leading-loose">I’m not sure yet. Maybe build a sturdy ship, gather a crew, <span class="font-bold text-gray-400">4</span> 
+                        <select id="a4-q4" class="mx-1 max-w-[200px] truncate"><option value=""></option><option value="when you finish school">when you finish school</option><option value="get a good degree">get a good degree</option><option value="to start a family">to start a family</option><option value="and then travel the world">and then travel the world</option><option value="then retire">then retire</option><option value="before I think about settling down">before I think about settling down</option></select>
+                        for a few months, you know, get some life experience and search the seas for my father, Odysseus.
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="font-bold text-secondary w-24 flex-shrink-0 text-right">Penelope:</div>
+                    <div class="flex-1">Well, that won’t do you much good against the suitors. In this day and age, kingdoms want leaders with political experience, not sailing experience.</div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="font-bold text-primary w-24 flex-shrink-0 text-right">Telemachus:</div>
+                    <div class="flex-1 leading-loose">Well, maybe you’re right, Mother. But even so, I want some time for an epic quest for myself <span class="font-bold text-gray-400">5</span> 
+                        <select id="a4-q5" class="mx-1 max-w-[200px] truncate"><option value=""></option><option value="when you finish school">when you finish school</option><option value="get a good degree">get a good degree</option><option value="to start a family">to start a family</option><option value="and then travel the world">and then travel the world</option><option value="then retire">then retire</option><option value="before I think about settling down">before I think about settling down</option></select>
+                        .
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="font-bold text-secondary w-24 flex-shrink-0 text-right">Penelope:</div>
+                    <div class="flex-1">There’s nothing wrong with settling down in Ithaca. That’s what your father and I tried to do before the Trojan War.</div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="font-bold text-primary w-24 flex-shrink-0 text-right">Telemachus:</div>
+                    <div class="flex-1">I know, Mother, and that’s fine – it was fine for you and Father, back before the age of heroes ended. But the world’s different now, and princes have such different goals, ideas, everything!</div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="font-bold text-secondary w-24 flex-shrink-0 text-right">Penelope:</div>
+                    <div class="flex-1">Yes, I suppose so. You’re right. The goddess Athena tells me the same thing.</div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="font-bold text-primary w-24 flex-shrink-0 text-right">Telemachus:</div>
+                    <div class="flex-1 leading-loose">But don't worry, Mother. I mean, I'd like <span class="font-bold text-gray-400">6</span> 
+                        <select id="a4-q6" class="mx-1 max-w-[200px] truncate"><option value=""></option><option value="when you finish school">when you finish school</option><option value="get a good degree">get a good degree</option><option value="to start a family">to start a family</option><option value="and then travel the world">and then travel the world</option><option value="then retire">then retire</option><option value="before I think about settling down">before I think about settling down</option></select>
+                        at some point. So you'll be playing with your royal grandchildren one day, hopefully in a palace free of suitors!
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="font-bold text-secondary w-24 flex-shrink-0 text-right">Penelope:</div>
+                    <div class="flex-1">Well, I'm delighted to hear that, Telemachus!</div>
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-between items-center border-t border-gray-700 pt-6">
+                <button onclick="navBack()" class="bg-gray-600 hover:bg-gray-500 text-white py-2 px-6 rounded-lg transition font-medium">Back</button>
+                <div class="space-x-4">
+                    <button id="btn-check-4" onclick="checkAct4()" class="bg-secondary hover:bg-purple-500 text-white py-2 px-6 rounded-lg transition font-bold shadow-md">Check Answers</button>
+                    <button onclick="navNext()" class="bg-primary hover:bg-indigo-500 text-white py-2 px-6 rounded-lg transition font-medium">Next Activity</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="section-5" class="activity-section bg-gray-800 rounded-2xl shadow-xl p-6 md:p-10 border border-gray-700">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-primary">Activity 5: Epic Plans</h2>
+                <span class="bg-gray-700 text-gray-300 py-1 px-3 rounded-full text-sm font-semibold score-display hidden" id="score-display-5">0/8</span>
+            </div>
+            <p class="text-gray-400 mb-6 italic">Complete the sentences with the words from the list.</p>
+            
+            <div class="bg-gray-700 rounded-lg p-4 mb-6 flex flex-wrap gap-2 justify-center font-medium">
+                career | degree | finish | promoted | retired | settled | start | travel
+            </div>
+
+            <ul class="space-y-6 text-lg text-gray-200">
+                <li class="bg-gray-750 p-4 rounded-lg leading-loose border-l-4 border-gray-600 hover:border-primary transition-colors">
+                    <span class="font-bold text-gray-400 mr-2">1.</span> Odysseus didn't plan to 
+                    <select id="a5-q1" class="mx-1"><option value=""></option><option value="career">career</option><option value="degree">degree</option><option value="finish">finish</option><option value="promoted">promoted</option><option value="retired">retired</option><option value="settled">settled</option><option value="start">start</option><option value="travel">travel</option></select>
+                    the Mediterranean Sea for ten long years; he just wanted to sail straight home after the Trojan War.
+                </li>
+                <li class="bg-gray-750 p-4 rounded-lg leading-loose border-l-4 border-gray-600 hover:border-primary transition-colors">
+                    <span class="font-bold text-gray-400 mr-2">2.</span> Penelope tricked the suitors by saying she would choose a new husband only when she managed to 
+                    <select id="a5-q2" class="mx-1"><option value=""></option><option value="career">career</option><option value="degree">degree</option><option value="finish">finish</option><option value="promoted">promoted</option><option value="retired">retired</option><option value="settled">settled</option><option value="start">start</option><option value="travel">travel</option></select>
+                    weaving her father-in-law's burial shroud.
+                </li>
+                <li class="bg-gray-750 p-4 rounded-lg leading-loose border-l-4 border-gray-600 hover:border-primary transition-colors">
+                    <span class="font-bold text-gray-400 mr-2">3.</span> You don't need a university 
+                    <select id="a5-q3" class="mx-1"><option value=""></option><option value="career">career</option><option value="degree">degree</option><option value="finish">finish</option><option value="promoted">promoted</option><option value="retired">retired</option><option value="settled">settled</option><option value="start">start</option><option value="travel">travel</option></select>
+                    to realize that blinding a Cyclops and insulting the god of the sea is a terrible idea.
+                </li>
+                <li class="bg-gray-750 p-4 rounded-lg leading-loose border-l-4 border-gray-600 hover:border-primary transition-colors">
+                    <span class="font-bold text-gray-400 mr-2">4.</span> The loyal swineherd Eumaeus fought so bravely against the suitors that Odysseus would have 
+                    <select id="a5-q4" class="mx-1"><option value=""></option><option value="career">career</option><option value="degree">degree</option><option value="finish">finish</option><option value="promoted">promoted</option><option value="retired">retired</option><option value="settled">settled</option><option value="start">start</option><option value="travel">travel</option></select>
+                    him to royal guard if he could.
+                </li>
+                <li class="bg-gray-750 p-4 rounded-lg leading-loose border-l-4 border-gray-600 hover:border-primary transition-colors">
+                    <span class="font-bold text-gray-400 mr-2">5.</span> Grieving the loss of his son, King Laertes had 
+                    <select id="a5-q5" class="mx-1"><option value=""></option><option value="career">career</option><option value="degree">degree</option><option value="finish">finish</option><option value="promoted">promoted</option><option value="retired">retired</option><option value="settled">settled</option><option value="start">start</option><option value="travel">travel</option></select>
+                    early from his royal duties to live quietly on his farm in the countryside.
+                </li>
+                <li class="bg-gray-750 p-4 rounded-lg leading-loose border-l-4 border-gray-600 hover:border-primary transition-colors">
+                    <span class="font-bold text-gray-400 mr-2">6.</span> Defeating mythical monsters and outsmarting powerful gods is certainly one way to build a legendary 
+                    <select id="a5-q6" class="mx-1"><option value=""></option><option value="career">career</option><option value="degree">degree</option><option value="finish">finish</option><option value="promoted">promoted</option><option value="retired">retired</option><option value="settled">settled</option><option value="start">start</option><option value="travel">travel</option></select>
+                    as a Greek hero.
+                </li>
+                <li class="bg-gray-750 p-4 rounded-lg leading-loose border-l-4 border-gray-600 hover:border-primary transition-colors">
+                    <span class="font-bold text-gray-400 mr-2">7.</span> After spending twenty years wandering from one dangerous island to another, Odysseus finally 
+                    <select id="a5-q7" class="mx-1"><option value=""></option><option value="career">career</option><option value="degree">degree</option><option value="finish">finish</option><option value="promoted">promoted</option><option value="retired">retired</option><option value="settled">settled</option><option value="start">start</option><option value="travel">travel</option></select>
+                    down in his own palace in Ithaca.
+                </li>
+                <li class="bg-gray-750 p-4 rounded-lg leading-loose border-l-4 border-gray-600 hover:border-primary transition-colors">
+                    <span class="font-bold text-gray-400 mr-2">8.</span> Before the Trojan War began, Odysseus only wanted to stay home in peace and 
+                    <select id="a5-q8" class="mx-1"><option value=""></option><option value="career">career</option><option value="degree">degree</option><option value="finish">finish</option><option value="promoted">promoted</option><option value="retired">retired</option><option value="settled">settled</option><option value="start">start</option><option value="travel">travel</option></select>
+                    a family with his new wife, Penelope.
+                </li>
+            </ul>
+
+            <div class="mt-8 flex justify-between items-center border-t border-gray-700 pt-6">
+                <button onclick="navBack()" class="bg-gray-600 hover:bg-gray-500 text-white py-2 px-6 rounded-lg transition font-medium">Back</button>
+                <div class="space-x-4">
+                    <button id="btn-check-5" onclick="checkAct5()" class="bg-secondary hover:bg-purple-500 text-white py-2 px-6 rounded-lg transition font-bold shadow-md">Check Answers</button>
+                    <button onclick="navNext()" class="bg-primary hover:bg-indigo-500 text-white py-2 px-6 rounded-lg transition font-medium">Next Activity</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="section-6" class="activity-section bg-gray-800 rounded-2xl shadow-xl p-6 md:p-10 border border-gray-700">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-primary">Activity 6: The Epic Video</h2>
+                <span class="bg-gray-700 text-gray-300 py-1 px-3 rounded-full text-sm font-semibold score-display hidden" id="score-display-6">0</span>
+            </div>
+            <p class="text-gray-400 mb-6 italic">Watch the video. Complete the text using the missing words in the word bank (every 20th word has been removed). Tap a word, then tap a box.</p>
+
+            <div class="mb-8 rounded-xl overflow-hidden border border-gray-700 bg-black flex justify-center shadow-lg">
+                <video id="video1" controls class="w-full max-h-96 object-cover" poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' viewBox='0 0 800 400'%3E%3Crect fill='%231f2937' width='800' height='400'/%3E%3Ctext fill='%239ca3af' font-family='sans-serif' font-size='24' dy='10.5' font-weight='bold' x='50%25' y='50%25' text-anchor='middle'%3EVideo Placeholder (video1.mp4)%3C/text%3E%3C/svg%3E">
+                    <source src="video1.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+
+            <!-- Dynamic Cloze Test Container -->
+            <div id="act6-word-bank" class="bg-gray-750 p-4 rounded-lg mb-6 flex flex-wrap gap-2 justify-center border border-gray-600 min-h-[60px]">
+                <!-- Populated by JS -->
+            </div>
+
+            <div id="act6-text-container" class="text-lg leading-loose text-gray-300 bg-gray-900/50 p-6 rounded-xl border border-gray-700 text-justify">
+                <!-- Populated by JS -->
+            </div>
+
+            <div class="mt-8 flex justify-between items-center border-t border-gray-700 pt-6">
+                <button onclick="navBack()" class="bg-gray-600 hover:bg-gray-500 text-white py-2 px-6 rounded-lg transition font-medium">Back</button>
+                <div class="space-x-4">
+                    <button id="btn-check-6" onclick="checkAct6()" class="bg-secondary hover:bg-purple-500 text-white py-2 px-6 rounded-lg transition font-bold shadow-md">Check Answers</button>
+                    <!-- Final Submit Button -->
+                    <button onclick="submitWorksheet()" class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white py-2 px-8 rounded-lg transition font-bold shadow-lg animate-pulse">Submit Results</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="section-results" class="activity-section bg-gray-800 rounded-2xl shadow-xl p-6 md:p-10 border border-gray-700">
+            <h2 class="text-4xl font-extrabold mb-2 text-center text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-500 to-pink-500">Your Results</h2>
+            <div class="text-center mb-10">
+                <p id="result-student-info" class="text-xl text-gray-300"></p>
+                <div id="result-final-score" class="text-5xl font-black mt-4 text-white drop-shadow-md"></div>
+                <p id="result-feedback-msg" class="text-lg mt-2 font-medium"></p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+                <!-- Charts -->
+                <div class="bg-gray-900 p-4 rounded-xl border border-gray-700 shadow-inner flex flex-col items-center">
+                    <h3 class="text-lg font-semibold text-gray-300 mb-4">Overall Performance</h3>
+                    <div class="w-48 h-48 relative">
+                        <canvas id="doughnutChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-gray-900 p-4 rounded-xl border border-gray-700 shadow-inner">
+                    <h3 class="text-lg font-semibold text-gray-300 mb-4 text-center">Score by Activity</h3>
+                    <canvas id="barChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Recommendations -->
+            <div class="bg-gray-750 p-6 rounded-xl border border-gray-600">
+                <h3 class="text-2xl font-bold text-secondary mb-4 flex items-center">
+                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    Action Plan & Recommendations
+                </h3>
+                <ul id="recommendations-list" class="space-y-3 text-gray-300 list-disc pl-5">
+                    <!-- Populated by JS based on score -->
+                </ul>
+            </div>
+            
+            <div class="mt-10 text-center">
+                <button onclick="location.reload()" class="bg-gray-600 hover:bg-gray-500 text-white py-3 px-8 rounded-lg transition font-bold">Start Over</button>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // --- State Management ---
+        const totalSections = 6;
+        let currentSection = 0;
+        let studentData = { name: '', date: '' };
+        
+        // Data for dynamic generation
+        const act3SentencesData = [
+            { id: 1, parts: ["He wanted to win the race, but he had to ", "____", " because of an injury."], answer: "give up" },
+            { id: 2, parts: ["She decided to ", "____", " tennis, and she bought a new racket yesterday."], answer: "take up" },
+            { id: 3, parts: ["The system is complicated, but we will ", "____", " together."], answer: "sort it out" },
+            { id: 4, parts: ["It was raining heavily, but they decided to ", "____", " hiking."], answer: "keep on" },
+            { id: 5, parts: ["I am ", "____", " the holidays, and I plan to relax completely."], answer: "looking forward to" },
+            { id: 6, parts: ["Her presentation was excellent, so it really ", "____", " among the others."], answer: "stood out" },
+            { id: 7, parts: ["My computer ", "____", " suddenly, so I lost all my recent work."], answer: "broke down" },
+            { id: 8, parts: ["We missed the train, and we ", "____", " taking a taxi home."], answer: "ended up" },
+            { id: 9, parts: ["He tried to fix the leak, but he finally ", "____", " and called a plumber."], answer: "gave up" },
+            { id: 10, parts: ["I want to ", "____", " a new hobby, or I might just read more books."], answer: "take up" },
+            { id: 11, parts: ["There was a misunderstanding, but the manager ", "____", " quickly."], answer: "sorted it out" },
+            { id: 12, parts: ["The work is difficult, but you must ", "____", " trying your best."], answer: "keep on" },
+            { id: 13, parts: ["They are ", "____", " the concert, so they bought tickets early."], answer: "looking forward to" },
+            { id: 14, parts: ["His unusual design ", "____", ", and he won the first prize."], answer: "stood out" },
+            { id: 15, parts: ["The old washing machine ", "____", " again, so we bought a new one."], answer: "broke down" }
+        ];
+
+        const videoRawText = "A close encounter with a man-eating giant. A sorceress who turns men into pigs. A long-lost king taking back his throne. On their own, any of these make great stories. But each is just one episode in the Odyssey. a 12,000-line poem spanning years of ancient Greek history, myth, and legend. How do we make sense of such a massive text that comes from and tells of a world so far away? The fact that we can read the Odyssey at all is pretty incredible, as it was composed before the Greek alphabet appeared in the 8th century BCE. It was made for listeners rather than readers, and was performed by oral poets called rhapsodes. Tradition identifies its author as a blind man named Homer, but no one definitively knows whether he was real or legendary. The earliest mentions of him occur centuries after his era, and the poems attributed to him seem to have been changed and rearranged many times by multiple authors before finally being written down in their current form. In fact, the word rhapsode means stitching together, as these poets combined existing stories, jokes, myths, and songs into a single narrative. To recite these massive epics live, rhapsodes employed a steady meter, along with mnemonic devices like repetition of memorized passages, or set pieces. These included descriptions of scenery and lists of characters, and help the rhapsode keep their place in the narrative, just as the chorus or bridge of a song helps us to remember the next verses. Because most of the tales were familiar to the audience, it was common to hear the sections of the poem out of order. At some point, the order became set in stone and the story was locked into place as the one we read today. But since the world has changed a bit in the last several thousand years, it helps to have some background before jumping in. The Odyssey itself is a sequel to Homer's other famous epic, the Iliad, which tells the story of the Trojan War. If there's one major theme uniting both poems, it's this. Do not, under any circumstances, incur the wrath of the gods. The Greek pantheon is a dangerous mix of divine power and human insecurity, prone to jealousy and grudges of epic proportions. And many of the problems faced by humans in the poems are caused by their hubris, or excessive pride in believing themselves superior to the gods. The desire to please the gods was so great that the ancient Greeks traditionally welcomed all strangers into their homes with generosity, for fear that the strangers might be gods in disguise. This ancient code of hospitality was called xenia. It involved hosts providing their guests with safety, food, and comfort. and the guests returning the favor with courtesy and gifts if they had them. Xenia has a significant role in the Odyssey, where Odysseus in his wanderings is the perpetual guest, while in his absence, his clever wife Penelope plays non-stop host. The Odyssey recounts all of Odysseus's years of travel, but the narrative begins in Medias res, in the middle of things. Ten years after the Trojan War, we find our hero trapped on an island, still far from his native Ithaca and the family he hasn't seen for 20 years. Because he's angered the sea god Poseidon by blinding his son, a Cyclops, Odysseus's passage home has been fraught with mishap after mishap. With trouble brewing at home and gods discussing his fate, Odysseus begins the account of those missing years to his hosts. One of the most fascinating things about the Odyssey is the gap between how little we know about its time period and the wealth of detail the text itself contains. Historians, linguists, and archaeologists have spent centuries searching for the ruins of Troy and identifying which islands Odysseus visited. Just like its hero, the 24-book epic has made its own long journey through centuries of myth and history to tell us its incredible story today.";
+        let act6Data = { html: "", words: [], answers: [] };
+        
+        let scores = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+        let maxScores = { 1: 7, 2: 8, 3: 15, 4: 6, 5: 8, 6: 0 }; // Act 6 max calculated dynamically
+        let checkedStatus = { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false };
+
+        // --- Core Functions ---
+        function startWorksheet() {
+            const name = document.getElementById('student-name').value.trim();
+            const date = document.getElementById('activity-date').value;
+            
+            if (!name || !date) {
+                alertCustom("Please enter your name and date to begin.");
+                return;
+            }
+            studentData.name = name;
+            studentData.date = date;
+            
+            // Build dynamic sections now that we start
+            buildActivity3();
+            buildActivity6();
+            
+            navNext();
+        }
+
+        function alertCustom(msg) {
+            // Replaces default alert with a cleaner UI insertion (briefly)
+            const el = document.createElement('div');
+            el.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-full shadow-lg z-50 font-bold animate-bounce';
+            el.innerText = msg;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 3000);
+        }
+
+        function updateProgress() {
+            const progress = (currentSection / totalSections) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+            if (currentSection > 0 && currentSection <= totalSections) {
+                document.getElementById('progress-text').innerText = `Activity ${currentSection} of ${totalSections}`;
+            } else if (currentSection > totalSections) {
+                document.getElementById('progress-text').innerText = `Results`;
+                document.getElementById('progress-bar').style.width = `100%`;
+            }
+        }
+
+        function showSection(index) {
+            document.querySelectorAll('.activity-section').forEach(sec => sec.classList.remove('active'));
+            if (index > totalSections) {
+                document.getElementById('section-results').classList.add('active');
+            } else {
+                document.getElementById(`section-${index}`).classList.add('active');
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            updateProgress();
+        }
+
+        function navNext() {
+            if (currentSection <= totalSections) {
+                currentSection++;
+                showSection(currentSection);
+            }
+        }
+
+        function navBack() {
+            if (currentSection > 1) {
+                currentSection--;
+                showSection(currentSection);
+            }
+        }
+
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                // Cancel any ongoing speech to avoid overlap
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.9; // Slightly slower for clarity
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // --- Activity Specific Checkers ---
+        function checkSelects(actNum, answerKey) {
+            if (checkedStatus[actNum]) return;
+            
+            let score = 0;
+            const btn = document.getElementById(`btn-check-${actNum}`);
+            const display = document.getElementById(`score-display-${actNum}`);
+            
+            Object.keys(answerKey).forEach((qId) => {
+                const select = document.getElementById(qId);
+                if (select.value === answerKey[qId]) {
+                    select.classList.add('correct');
+                    score++;
+                } else {
+                    select.classList.add('incorrect');
+                }
+                select.disabled = true;
+            });
+            
+            scores[actNum] = score;
+            checkedStatus[actNum] = true;
+            
+            btn.classList.replace('bg-secondary', 'bg-gray-500');
+            btn.classList.remove('hover:bg-purple-500');
+            btn.innerText = "Checked";
+            btn.disabled = true;
+            
+            display.innerText = `${score}/${maxScores[actNum]}`;
+            display.classList.remove('hidden');
+        }
+
+        function checkAct1() {
+            const answers = {
+                'a1-q1': 'set', 'a1-q2': 'hero', 'a1-q3': 'characters',
+                'a1-q4': 'villain', 'a1-q5': 'plot', 'a1-q6': 'ending', 'a1-q7': 'dialogue'
+            };
+            checkSelects(1, answers);
+        }
+
+        function checkAct2() {
+            const answers = {
+                'a2-q1': 'gave up', 'a2-q2': 'took up', 'a2-q3': 'sort it out',
+                'a2-q4': 'keep on', 'a2-q5': 'looking forward to', 'a2-q6': 'stands out',
+                'a2-q7': 'broke down', 'a2-q8': 'ended up'
+            };
+            checkSelects(2, answers);
+        }
+
+        function checkAct4() {
+            const answers = {
+                'a4-q1': 'get a good degree', 'a4-q2': 'then retire', 'a4-q3': 'when you finish school',
+                'a4-q4': 'and then travel the world', 'a4-q5': 'before I think about settling down', 'a4-q6': 'to start a family'
+            };
+            checkSelects(4, answers);
+        }
+
+        function checkAct5() {
+            const answers = {
+                'a5-q1': 'travel', 'a5-q2': 'finish', 'a5-q3': 'degree', 'a5-q4': 'promoted',
+                'a5-q5': 'retired', 'a5-q6': 'career', 'a5-q7': 'settled', 'a5-q8': 'start'
+            };
+            checkSelects(5, answers);
+        }
+
+        let act3State = {}; // Keeps track of what is placed where
+
+        function buildActivity3() {
+            const container = document.getElementById('act3-container');
+            container.innerHTML = '';
+            
+            act3SentencesData.forEach((item, index) => {
+                const words = ["give up", "take up", "sort it out", "keep on", "looking forward to", "stood out", "broke down", "ended up", "gave up", "sorted it out"];
+                // Generate a mini word bank for each sentence to make it easier on mobile. 
+                // We'll give the correct answer + 2 distractors randomly picked.
+                let bank = [item.answer];
+                while(bank.length < 3) {
+                    const r = words[Math.floor(Math.random() * words.length)];
+                    if(!bank.includes(r)) bank.push(r);
+                }
+                bank.sort(() => Math.random() - 0.5); // Shuffle
+
+                const fullSentence = item.parts[0] + item.answer + item.parts[2];
+
+                const html = `
+                    <div class="bg-gray-750 p-4 rounded-xl border border-gray-600 relative" id="act3-item-${item.id}">
+                        <div class="flex items-center mb-3">
+                            <span class="font-bold text-gray-400 w-8">${index + 1}.</span>
+                            <div class="flex-1 text-lg">
+                                ${item.parts[0]}
+                                <div class="drop-zone inline-block" id="dz-${item.id}" onclick="handleZoneClick(${item.id})"></div>
+                                ${item.parts[2]}
+                            </div>
+                            <button onclick="speakText('${fullSentence.replace(/'/g, "\\'")}')" class="ml-2 text-primary hover:text-white transition" title="Read Aloud">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5 10v4a2 2 0 002 2h2.586l3.707 3.707a1 1 0 001.707-.707V4.707a1 1 0 00-1.707-.707L9.586 10H7a2 2 0 00-2 2z"></path></svg>
+                            </button>
+                        </div>
+                        <div class="text-sm bg-gray-800 p-2 rounded flex flex-wrap gap-2 justify-center" id="wb-${item.id}">
+                            ${bank.map((w, i) => `<div class="word-bank-item" id="wbi-${item.id}-${i}" onclick="handleWordClick(${item.id}, '${w}', 'wbi-${item.id}-${i}')">${w}</div>`).join('')}
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', html);
+                act3State[item.id] = { filled: null, sourceId: null, correct: item.answer };
+            });
+        }
+
+        // Tap-to-place mechanics
+        let selectedWordInfo = null; // { id: act_id, word: string, domId: string }
+
+        function handleWordClick(actId, word, domId) {
+            if (checkedStatus[3]) return;
+            const item = document.getElementById(domId);
+            if (item.classList.contains('used')) return;
+
+            // Visual feedback for selection
+            document.querySelectorAll('.word-bank-item').forEach(el => el.style.border = 'none');
+            item.style.border = '2px solid #8b5cf6';
+            
+            selectedWordInfo = { actId, word, domId };
+        }
+
+        function handleZoneClick(actId) {
+            if (checkedStatus[3]) return;
+            const zone = document.getElementById(`dz-${actId}`);
+            
+            // If zone already has a word, put it back
+            if (act3State[actId].filled) {
+                const oldSourceId = act3State[actId].sourceId;
+                document.getElementById(oldSourceId).classList.remove('used');
+                zone.innerText = '';
+                zone.classList.remove('filled');
+                act3State[actId].filled = null;
+                act3State[actId].sourceId = null;
+            }
+
+            // If a word is currently selected, place it here (only if it belongs to this sub-activity's bank)
+            if (selectedWordInfo && selectedWordInfo.actId === actId) {
+                zone.innerText = selectedWordInfo.word;
+                zone.classList.add('filled');
+                document.getElementById(selectedWordInfo.domId).classList.add('used');
+                document.getElementById(selectedWordInfo.domId).style.border = 'none';
+                
+                act3State[actId].filled = selectedWordInfo.word;
+                act3State[actId].sourceId = selectedWordInfo.domId;
+                selectedWordInfo = null; // Clear selection
+            }
+        }
+
+        function checkAct3() {
+            if (checkedStatus[3]) return;
+            let score = 0;
+            const btn = document.getElementById('btn-check-3');
+            const display = document.getElementById('score-display-3');
+
+            Object.keys(act3State).forEach(key => {
+                const state = act3State[key];
+                const zone = document.getElementById(`dz-${key}`);
+                if (state.filled === state.correct) {
+                    zone.classList.add('correct');
+                    score++;
+                } else {
+                    zone.classList.add('incorrect');
+                    // Show correct answer if missed
+                    if(!state.filled) zone.innerText = "Missed";
+                }
+                zone.style.cursor = 'not-allowed';
+            });
+
+            scores[3] = score;
+            checkedStatus[3] = true;
+            btn.classList.replace('bg-secondary', 'bg-gray-500');
+            btn.innerText = "Checked";
+            btn.disabled = true;
+            display.innerText = `${score}/${maxScores[3]}`;
+            display.classList.remove('hidden');
+        }
+
+        function buildActivity6() {
+            const rawWords = videoRawText.split(/\s+/);
+            let processedHtml = "";
+            let extractedWords = [];
+            let answersDict = {}; // inputId -> answer
+            let clozeId = 1;
+
+            for (let i = 0; i < rawWords.length; i++) {
+                // Every 20th word (index 19, 39, etc.)
+                if ((i + 1) % 20 === 0) {
+                    // Extract word, handle punctuation attached to the end
+                    let word = rawWords[i];
+                    let punct = "";
+                    const match = word.match(/^([a-zA-Z0-9-]+)(.*)$/);
+                    if (match) {
+                        word = match[1];
+                        punct = match[2];
+                    }
+                    
+                    if(word.length > 0) {
+                        extractedWords.push({id: `c6-${clozeId}`, word: word.toLowerCase()});
+                        answersDict[`dz6-${clozeId}`] = word.toLowerCase();
+                        
+                        processedHtml += `<span class="drop-zone mx-1 inline-block min-w-[80px]" id="dz6-${clozeId}" onclick="handleA6ZoneClick('dz6-${clozeId}')"></span>${punct} `;
+                        clozeId++;
+                    } else {
+                         processedHtml += rawWords[i] + " ";
+                    }
+                } else {
+                    processedHtml += rawWords[i] + " ";
+                }
+            }
+
+            maxScores[6] = clozeId - 1;
+            act6Data.answers = answersDict;
+
+            // Shuffle extracted words
+            extractedWords.sort(() => Math.random() - 0.5);
+            
+            // Build word bank HTML
+            const bankHtml = extractedWords.map(w => 
+                `<div class="word-bank-item act6-wbi" id="wbi6-${w.id}" onclick="handleA6WordClick('${w.word}', 'wbi6-${w.id}')">${w.word}</div>`
+            ).join('');
+
+            document.getElementById('act6-text-container').innerHTML = processedHtml;
+            document.getElementById('act6-word-bank').innerHTML = bankHtml;
+            
+            // State for tap-to-place in Act 6
+            window.a6State = {}; // dzId -> {filled: word, sourceId: id}
+            Object.keys(answersDict).forEach(k => window.a6State[k] = {filled: null, sourceId: null});
+        }
+
+        let a6SelectedWord = null;
+
+        function handleA6WordClick(word, domId) {
+            if (checkedStatus[6]) return;
+            const item = document.getElementById(domId);
+            if (item.classList.contains('used')) return;
+            
+            document.querySelectorAll('.act6-wbi').forEach(el => el.style.border = 'none');
+            item.style.border = '2px solid #8b5cf6';
+            a6SelectedWord = { word, domId };
+        }
+
+        function handleA6ZoneClick(dzId) {
+            if (checkedStatus[6]) return;
+            const zone = document.getElementById(dzId);
+            const state = window.a6State[dzId];
+
+            if (state.filled) {
+                document.getElementById(state.sourceId).classList.remove('used');
+                zone.innerText = '';
+                zone.classList.remove('filled');
+                state.filled = null;
+                state.sourceId = null;
+            }
+
+            if (a6SelectedWord) {
+                zone.innerText = a6SelectedWord.word;
+                zone.classList.add('filled');
+                document.getElementById(a6SelectedWord.domId).classList.add('used');
+                document.getElementById(a6SelectedWord.domId).style.border = 'none';
+                
+                state.filled = a6SelectedWord.word;
+                state.sourceId = a6SelectedWord.domId;
+                a6SelectedWord = null;
+            }
+        }
+
+        function checkAct6() {
+            if (checkedStatus[6]) return;
+            let score = 0;
+            const btn = document.getElementById('btn-check-6');
+            const display = document.getElementById('score-display-6');
+
+            Object.keys(act6Data.answers).forEach(dzId => {
+                const zone = document.getElementById(dzId);
+                const state = window.a6State[dzId];
+                const correct = act6Data.answers[dzId];
+
+                if (state.filled && state.filled.toLowerCase() === correct) {
+                    zone.classList.add('correct');
+                    score++;
+                } else {
+                    zone.classList.add('incorrect');
+                    if(!state.filled) zone.innerText = correct; // Show answer
+                }
+                zone.style.cursor = 'not-allowed';
+            });
+
+            scores[6] = score;
+            checkedStatus[6] = true;
+            btn.classList.replace('bg-secondary', 'bg-gray-500');
+            btn.innerText = "Checked";
+            btn.disabled = true;
+            display.innerText = `${score}/${maxScores[6]}`;
+            display.classList.remove('hidden');
+        }
+
+        function submitWorksheet() {
+            // Force check any un-checked activities silently to compute score based on current inputs
+            if(!checkedStatus[1]) checkAct1();
+            if(!checkedStatus[2]) checkAct2();
+            if(!checkedStatus[3]) checkAct3();
+            if(!checkedStatus[4]) checkAct4();
+            if(!checkedStatus[5]) checkAct5();
+            if(!checkedStatus[6]) checkAct6();
+
+            let totalScore = 0;
+            let maxTotal = 0;
+            let percentPerAct = {};
+
+            for (let i = 1; i <= 6; i++) {
+                totalScore += scores[i];
+                maxTotal += maxScores[i];
+                percentPerAct[i] = (scores[i] / maxScores[i]) * 100;
+            }
+
+            const overallPercent = Math.round((totalScore / maxTotal) * 100);
+
+            // Populate Text Info
+            document.getElementById('result-student-info').innerText = `${studentData.name} | Date: ${studentData.date}`;
+            document.getElementById('result-final-score').innerText = `${overallPercent}%`;
+            
+            let feedback = "";
+            let colorClass = "";
+            if (overallPercent >= 90) { feedback = "Outstanding work! You have mastered this unit."; colorClass = "text-green-400"; }
+            else if (overallPercent >= 75) { feedback = "Great job! You have a solid understanding."; colorClass = "text-blue-400"; }
+            else if (overallPercent >= 60) { feedback = "Good effort, but review some areas."; colorClass = "text-yellow-400"; }
+            else { feedback = "Please review the unit material and try again."; colorClass = "text-red-400"; }
+            
+            const msgEl = document.getElementById('result-feedback-msg');
+            msgEl.innerText = feedback;
+            msgEl.className = `text-lg mt-2 font-bold ${colorClass}`;
+
+            generateRecommendations(percentPerAct);
+            renderCharts(percentPerAct, overallPercent);
+
+            currentSection = totalSections + 1;
+            showSection(currentSection);
+        }
+
+        function generateRecommendations(percents) {
+            const recList = document.getElementById('recommendations-list');
+            recList.innerHTML = '';
+            const recs = [];
+
+            // Generate 8 recommendations based on data
+            if (percents[1] < 100) recs.push("Activity 1: Review vocabulary related to story elements (plot, hero, setting).");
+            else recs.push("Activity 1: Excellent understanding of basic literary terms.");
+
+            if (percents[2] < 100) recs.push("Activity 2: Practice memorizing the specific meanings of the phrasal verbs in this unit.");
+            else recs.push("Activity 2: Strong grasp of phrasal verb definitions in context.");
+
+            if (percents[3] < 80) recs.push("Activity 3: Focus on sentence structure when using compound sentences and phrasal verbs together.");
+            
+            if (percents[4] < 100) recs.push("Activity 4: Re-read dialogues carefully to understand context clues for inserting phrases.");
+            else recs.push("Activity 4: Great reading comprehension of dialogue structure.");
+
+            if (percents[5] < 100) recs.push("Activity 5: Review life-plan vocabulary (degree, career, settle down).");
+            
+            if (percents[6] < 70) recs.push("Activity 6: Improve listening and reading skills by engaging with more complex texts like The Odyssey background.");
+            else recs.push("Activity 6: Good job handling the advanced cloze text based on the video.");
+
+            // Pad to ensure 8 specific recommendations
+            const genericRecs = [
+                "General: Continue reading epic stories to improve vocabulary in context.",
+                "General: Try writing your own short story using 5 phrasal verbs from this unit.",
+                "General: Watch the provided video again, focusing on pronunciation.",
+                "General: Practice speaking the dialogues aloud to improve fluency."
+            ];
+
+            while (recs.length < 8 && genericRecs.length > 0) {
+                recs.push(genericRecs.shift());
+            }
+
+            recs.forEach(r => {
+                const li = document.createElement('li');
+                li.innerText = r;
+                // Highlight negative ones slightly
+                if (r.includes("Review") || r.includes("Practice") || r.includes("Focus") || r.includes("Improve")) {
+                    li.classList.add('text-yellow-200');
+                }
+                recList.appendChild(li);
+            });
+        }
+
+        let chartInstance1 = null;
+        let chartInstance2 = null;
+
+        function renderCharts(percents, overall) {
+            // Destroy existing instances if user resubmits
+            if(chartInstance1) chartInstance1.destroy();
+            if(chartInstance2) chartInstance2.destroy();
+
+            // Doughnut Chart (Overall)
+            const ctxDoughnut = document.getElementById('doughnutChart').getContext('2d');
+            chartInstance1 = new Chart(ctxDoughnut, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Correct', 'Incorrect'],
+                    datasets: [{
+                        data: [overall, 100 - overall],
+                        backgroundColor: ['#10b981', '#374151'], // Emerald and Gray
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    cutout: '75%'
+                }
+            });
+
+            // Bar Chart (Per Activity)
+            const ctxBar = document.getElementById('barChart').getContext('2d');
+            chartInstance2 = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: ['Act 1', 'Act 2', 'Act 3', 'Act 4', 'Act 5', 'Act 6'],
+                    datasets: [{
+                        label: 'Score %',
+                        data: [percents[1], percents[2], percents[3], percents[4], percents[5], percents[6]],
+                        backgroundColor: [
+                            'rgba(99, 102, 241, 0.8)', // Indigo
+                            'rgba(139, 92, 246, 0.8)', // Violet
+                            'rgba(236, 72, 153, 0.8)', // Pink
+                            'rgba(245, 158, 11, 0.8)', // Amber
+                            'rgba(16, 185, 129, 0.8)', // Emerald
+                            'rgba(14, 165, 233, 0.8)'  // Sky
+                        ],
+                        borderRadius: 6,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: { color: '#374151' },
+                            ticks: { color: '#9ca3af' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#9ca3af' }
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
